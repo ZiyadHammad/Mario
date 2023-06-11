@@ -1,3 +1,7 @@
+import maps from "./maps.js";
+import { big } from "./utils.js";
+// import levelConfig from './config.js'
+
 // init Kaboom
 kaboom({
   global: true,
@@ -31,9 +35,8 @@ loadSprite('blue-surprise','blue-surprise.png')
 const PLAYER_SPEED = 120;
 const ENEMY_SPEED = 20;
 const JUMP = 400;
-const BIG_JUMP = 500;
-const FALL_DEATH = 400
 let CURRENT_JUMP = JUMP;
+const FALL_DEATH = 400
 let isJumping = true;
 
 // Add game scenes
@@ -45,34 +48,6 @@ scene("game", ({ level, score }) => {
 
   // init layers
   layers(["bg", "obj", "ui"], "obj");
-
-  // init map
-  const maps = [
-    [
-      "                                           ",
-      "                                           ",
-      "                                           ",
-      "                                           ",
-      "                                           ",
-      "   $  =?=*=                                ",
-      "                                           ",
-      "                              {}           ",
-      "                    !   !     ()           ",
-      "=================================  ========",
-    ],
-    [
-      "|                                           |",
-      "|                *                          |",
-      "|                                           |",
-      "|                                           |",
-      "|                                           |",
-      "|   ?????        -                          |",
-      "|              -                            |",
-      "|          --                           {}  |",
-      "|        -               x      x       ()  |",
-      "____________________________________   ______",
-    ]
-  ]
 
   // Init Level Configuration & and define sprites properties
   const levelCfg = {
@@ -107,39 +82,6 @@ scene("game", ({ level, score }) => {
       value: score,
     },
   ]);
-
-  // Fn big() - to double the size of mario for a period of time after mushroom consumption.
-  // & return to regular size once timer is <= 0
-
-  function big() {
-    let timer = 0;
-    let isBig = false;
-    return {
-      update() {
-        if (isBig) {
-          CURRENT_JUMP = BIG_JUMP;
-          timer -= dt();
-          if (timer <= 0) {
-            this.smallify();
-          }
-        }
-      },
-      isBig() {
-        return isBig;
-      },
-      smallify() {
-        this.scale = vec2(1);
-        CURRENT_JUMP = JUMP;
-        timer = 0;
-        isBig = false;
-      },
-      biggify(time) {
-        this.scale = vec2(2);
-        timer = time;
-        isBig = true;
-      },
-    };
-  }
 
   // Init Player(mario) and config
   const player = add([
@@ -238,8 +180,6 @@ player.collides('pipe', () => {
   })
 })
 });
-
-
 
 scene('lose', ({ score }) => {
   add([text(score, 32), origin('center'), pos(width()/2, height()/2)])
