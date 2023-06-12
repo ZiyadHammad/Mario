@@ -1,6 +1,5 @@
-import maps from "./maps.js";
-import { big } from "./utils.js";
-// import levelConfig from './config.js'
+import maps from "./data/maps.js";
+import { big } from "./data/utils.js";
 
 // init Kaboom
 kaboom({
@@ -25,26 +24,22 @@ loadSprite("pipe-top-left", "pipe-top-left.png");
 loadSprite("pipe-bottom-left", "pipe-bottom-left.png");
 loadSprite("pipe-top-right", "pipe-top-right.png");
 loadSprite("pipe-bottom-right", "pipe-bottom-right.png");
-loadSprite('blue-brick-texture','blue-brick-texture.png')
-loadSprite('blue-brick','blue-brick.png')
-loadSprite('blue-evil-shroom','blue-evil-shroom.png')
-loadSprite('blue-steel','blue-steel.png')
-loadSprite('blue-surprise','blue-surprise.png')
+loadSprite("blue-brick-texture", "blue-brick-texture.png");
+loadSprite("blue-brick", "blue-brick.png");
+loadSprite("blue-evil-shroom", "blue-evil-shroom.png");
+loadSprite("blue-steel", "blue-steel.png");
+loadSprite("blue-surprise", "blue-surprise.png");
 
 // Defining players animations
 const PLAYER_SPEED = 120;
 const ENEMY_SPEED = 20;
 const JUMP = 400;
 let CURRENT_JUMP = JUMP;
-const FALL_DEATH = 400
+const FALL_DEATH = 400;
 let isJumping = true;
 
 // Add game scenes
 scene("game", ({ level, score }) => {
-  // Adding level and scoreboard to UI
-  add([
-    text('Level ' + parseInt(level + 1)), pos(-18,-5)
-  ])
 
   // init layers
   layers(["bg", "obj", "ui"], "obj");
@@ -54,34 +49,49 @@ scene("game", ({ level, score }) => {
     width: 20,
     height: 20,
     "=": [sprite("block"), solid()],
-    '_': [sprite('blue-brick-texture'), solid(), scale(0.5)],
-    '|': [sprite('blue-brick'), solid(), scale(0.5)],
+    '_': [sprite("blue-brick-texture"), solid(), scale(0.5)],
+    "|": [sprite("blue-brick"), solid(), scale(0.5)],
     "#": [sprite("empty-block"), solid()],
-    '-': [sprite('blue-steel'), solid(), scale(0.5)],
+    "-": [sprite("blue-steel"), solid(), scale(0.5)],
     '$': [sprite("coin"), "coin"],
     "?": [sprite("surprise-block"), solid(), "coin-surprise"],
     "*": [sprite("surprise-block"), solid(), "mushroom-surprise"],
-    "{": [sprite("pipe-top-left"), solid(), scale(0.5), 'pipe'],
-    "}": [sprite("pipe-top-right"), solid(), scale(0.5), 'pipe'],
+    "{": [sprite("pipe-top-left"), solid(), scale(0.5), "pipe"],
+    "}": [sprite("pipe-top-right"), solid(), scale(0.5), "pipe"],
     "(": [sprite("pipe-bottom-left"), solid(), scale(0.5)],
     ")": [sprite("pipe-bottom-right"), solid(), scale(0.5)],
     "!": [sprite("evil-shroom"), solid(), "dangerous"],
-    'x': [sprite('blue-evil-shroom'), solid(), 'dangerous', scale(0.5)],
+    "x": [sprite("blue-evil-shroom"), solid(), "dangerous", scale(0.5)],
     "^": [sprite("mushroom"), solid(), "mushroom", body()],
   };
 
   // Adding/Init a game level
   const gameLevel = addLevel(maps[level], levelCfg);
 
-  // Init score
+  const levelLabel = add([
+    text(`Level ${parseInt(level + 1)}`),
+    pos(0, 0),
+    layer("ui"),
+  ]);
+
+
   const scoreLabel = add([
-    text(score),
-    pos(30, 10),
+
+    text(`${score}`),
+    pos(0,0),
     layer("ui"),
     {
       value: score,
     },
   ]);
+
+  const scoreLabelText = add([
+    text("Score"),
+    pos(0,0),
+    layer("ui"),
+  ]);
+
+  
 
   // Init Player(mario) and config
   const player = add([
@@ -107,7 +117,6 @@ scene("game", ({ level, score }) => {
     }
   });
 
-
   // adding keyboard events to player
 
   keyDown("left", () => {
@@ -116,29 +125,30 @@ scene("game", ({ level, score }) => {
   keyDown("right", () => {
     player.move(PLAYER_SPEED, 0);
   });
+  
 
-    // Player loses when touching evil shroom
-    player.collides('dangerous', (d) => {
-      if (isJumping) {
-        destroy(d)
-      } else {
-        go('lose', { score: scoreLabel.value})
-      }
-    })
+  // Player loses when touching evil shroom
+  player.collides("dangerous", (d) => {
+    if (isJumping) {
+      destroy(d);
+    } else {
+      go("lose", { score: scoreLabel.value });
+    }
+  });
 
   // Checking to see if mario is on ground or not, changing isJumping value to false
   player.action(() => {
-    if(player.grounded()) {
-      isJumping = false
-    }
-  })
-
-  keyPress('space', () => {
     if (player.grounded()) {
-      isJumping = true
-      player.jump(CURRENT_JUMP)
+      isJumping = false;
     }
-  })
+  });
+
+  keyPress("space", () => {
+    if (player.grounded()) {
+      isJumping = true;
+      player.jump(CURRENT_JUMP);
+    }
+  });
 
   // making mushroom move.
   action("mushroom", (m) => {
@@ -146,16 +156,24 @@ scene("game", ({ level, score }) => {
   });
 
   // evil shroom move
-  action("evil-shroom", (es) => {
-    es.move(-ENEMY_SPEED);
+  action("dangerous", (es) => {
+    es.move(-ENEMY_SPEED, 0);
   });
 
   player.action(() => {
-    camPos(player.pos)
+    camPos(player.pos);
     if (player.pos.y >= FALL_DEATH) {
-      go('lose', {score: scoreLabel.value})
+      go("lose", { score: scoreLabel.value });
     }
-  })
+
+    const camPosition = camPos();
+  scoreLabel.pos.x = camPosition.x + 7;
+  scoreLabel.pos.y = camPosition.y - 180;
+  scoreLabelText.pos.x = camPosition.x - 40;
+  scoreLabelText.pos.y = camPosition.y - 180;
+  levelLabel.pos.x = camPosition.x - 40;
+  levelLabel.pos.y = camPosition.y - 200;
+  });
 
   // mario consumes mushroom
   player.collides("mushroom", (m) => {
@@ -171,18 +189,41 @@ scene("game", ({ level, score }) => {
   });
 
   // Mario goes down pipe which leads to next level
-player.collides('pipe', () => {
-  keyPress('down', () => {
-    go('game', {
-      level: (level + 1) % maps.length,
-      score: scoreLabel.value
-    })
-  })
-})
+  player.collides("pipe", () => {
+    keyPress("down", () => {
+      go("game", {
+        level: (level + 1) % maps.length,
+        score: scoreLabel.value,
+      });
+    });
+  });
 });
 
-scene('lose', ({ score }) => {
-  add([text(score, 32), origin('center'), pos(width()/2, height()/2)])
-} )
+// END OF GAME SCENE ^^^ _________________________
 
-start("game", { level: 0,  score: 0 });
+function restartGame() {
+  go("game", { level: 0, score: 0 });
+}
+
+scene("lose", ({ score }) => {
+  add([
+    text(`  Final Score \n \n ${score} coins`, 26),
+    origin("center"),
+    pos(width() / 2, height() / 2 - 50),
+    layer("ui"),
+  ]);
+
+  add([
+    text("Try Again", 24),
+    origin("center"),
+    pos(width() / 2, height() / 2 + 50),
+    layer("ui"),
+    area({ cursor: "pointer" }),
+    // handle the click event manually
+    mouseClick(() => {
+      restartGame();
+    }),
+  ]);
+});
+
+start("game", { level: 0, score: 0 });
